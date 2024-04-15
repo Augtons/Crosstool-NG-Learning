@@ -1,4 +1,4 @@
-name: Build and Install Crosstool-NG
+name: Make Tools
 
 on:
   workflow_dispatch:
@@ -9,31 +9,29 @@ env:
   CROSSTOOL_NG_VERSION: 1.26.0
 
 jobs:
-  crosstool-ng:
+  make-tools:
     name: Build And Install Crosstool-NG
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 检出对应的代码
         uses: actions/checkout@v4
-      - name: Install Pre-requires
+      - name: 设置环境变量
+        run: echo CROSSTOOL_NG_PACKAGE_NAME="Crosstool-NG-${{ env.CROSSTOOL_NG_VERSION }}-${{ runner.os }}-${{ runner.arch }}" >> $GITHUB_ENV
+      - name: 安装依赖
         run: sudo apt install help2man libtool libtool-bin
-      - name: Download Crosstool-NG And Extract
+      - name: 下载 Crosstool-NG 并解压缩
         run: |
           wget http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-${{ env.CROSSTOOL_NG_VERSION }}.tar.bz2
           tar --extract --bzip2 --file=crosstool-ng-${{ env.CROSSTOOL_NG_VERSION }}.tar.bz2
-      - name: Build
+      - name: 编译安装 Crosstool-NG
         run: |
           cd crosstool-ng-${{ env.CROSSTOOL_NG_VERSION }}
-          ./configure --prefix=$HOME/install/Crosstool-NG-1.26.0-${{ runner.os }}-${{ runner.arch }}
+          ./configure --prefix=$HOME/install/${{ env.CROSSTOOL_NG_PACKAGE_NAME }}
           make -j16
           sudo make install
           cd ..
-      - name: Upload
+      - name: 打包 Crosstool-NG
         uses: actions/upload-artifact@v4
         with:
-          name: Crosstool-NG-1.26.0-${{ runner.os }}-${{ runner.arch }}
+          name: ${{ env.CROSSTOOL_NG_PACKAGE_NAME }}
           path: ~/install
-
-
-      
-
