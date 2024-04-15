@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install Pre-requires
+        run: sudo apt install help2man libtool libtool-bin
       - name: Download Crosstool-NG And Extract
         run: |
           wget ${{ env.CROSSTOOL_NG_DOWNLOAD_URL }}
@@ -22,18 +24,19 @@ jobs:
       - name: Build
         run: |
           cd crosstool-ng-1.26.0
-          ./configure --prefix=../crosstool-ng-install
+          ./configure --prefix=$HOME/crosstool-ng-install
           make -j16
           sudo make install
           cd ..
       - name: Package
         run: |
-          tar --create --gzip --file=crosstool-ng-1.26.0-$RUNNER_OS-$RUNNER_ARCH.tar.bz2
+          cd ~
+          tar --create --gzip --file=crosstool-ng-1.26.0-$RUNNER_OS-$RUNNER_ARCH.tar.bz2 ~/crosstool-ng-install
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: crosstool-ng-1.26.0-${{ runner.os }}-${{ runner.arch }}
-          path: crosstool-ng-1.26.0-${{ runner.os }}-${{ runner.arch }}.tar.bz2
+          path: ~/crosstool-ng-1.26.0-${{ runner.os }}-${{ runner.arch }}.tar.bz2
 
 
       
