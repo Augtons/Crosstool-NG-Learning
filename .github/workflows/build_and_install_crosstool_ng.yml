@@ -1,0 +1,39 @@
+name: Build and Install Crosstool-NG
+
+on:
+  release:
+    types: [published]
+
+env:
+  CROSSTOOL_NG_DOWNLOAD_URL: "http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-1.26.0.tar.bz2"
+
+jobs:
+  install:
+    name: Build And Install Crosstool-NG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download Crosstool-NG And Extract
+        run: |
+          wget ${{ env.CROSSTOOL_NG_DOWNLOAD_URL }}
+          tar --extract --bzip2 --file=crosstool-ng-1.26.0.tar.bz2
+      - name: Build
+        run: |
+          cd crosstool-ng-1.26.0
+          ./configure --prefix=../crosstool-ng-install
+          make -j16
+          sudo make install
+          cd ..
+      - name: Package
+        run: |
+          tar --create --gzip --file=crosstool-ng-1.26.0-$RUNNER_OS-$RUNNER_ARCH.tar.bz2
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: crosstool-ng-1.26.0-${{ runner.os }}-${{ runner.arch }}
+          path: crosstool-ng-1.26.0-${{ runner.os }}-${{ runner.arch }}.tar.bz2
+
+
+      
+
