@@ -48,7 +48,7 @@ jobs:
       - name: 打包工具链
         run: |
           cd ~/x-tools
-          tar --create --gzip --file=~/${{ github.event.release.name }}.tar.gz ./
+          tar --create --gzip --file=$HOME/${{ github.event.release.name }}.tar.gz ./
 
       - name: 上传工具链
         uses: actions/upload-artifact@v4
