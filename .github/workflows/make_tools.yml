@@ -5,42 +5,31 @@ on:
   release:
     types: [published]
 
-env:
-  CROSSTOOL_NG_VERSION: 1.26.0
-
 jobs:
+  crosstool-ng:
+    uses: ./.github/workflows/setup-crosstool-ng.yml
+    with:
+      version: 1.26.0
+
   make-tools:
     name: 制作交叉编译工具
     runs-on: ubuntu-latest
+    needs: crosstool-ng
     steps:
-      - name: 检出对应的代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 设置环境变量
-        run: echo CROSSTOOL_NG_PACKAGE_NAME="Crosstool-NG-${{ env.CROSSTOOL_NG_VERSION }}-${{ runner.os }}-${{ runner.arch }}" >> $GITHUB_ENV
-
-      - name: 安装依赖
-        run: sudo apt install help2man libtool libtool-bin
-
-      - name: 下载 Crosstool-NG 并解压缩
-        run: |
-          wget http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-${{ env.CROSSTOOL_NG_VERSION }}.tar.bz2
-          tar --extract --bzip2 --file=crosstool-ng-${{ env.CROSSTOOL_NG_VERSION }}.tar.bz2
-
-      - name: 编译安装 Crosstool-NG
-        run: |
-          cd crosstool-ng-${{ env.CROSSTOOL_NG_VERSION }}
-          ./configure --prefix=$HOME/install/${{ env.CROSSTOOL_NG_PACKAGE_NAME }}
-          make -j16
-          sudo make install
-          cd ..
-          echo PATH="$HOME/install/${{ env.CROSSTOOL_NG_PACKAGE_NAME }}/bin:$PATH" >> $GITHUB_ENV
-
-      - name: 打包 Crosstool-NG
-        uses: actions/upload-artifact@v4
+      - name: 加载 Crosstool-NG
+        id: crosstool_ng
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ env.CROSSTOOL_NG_PACKAGE_NAME }}
-          path: ~/install
+          name: ${{ needs.crosstool-ng.outputs.artifact_name }}
+      
+      - name: 设置 ct-ng 环境
+        run: |
+          sudo mkdir ${{ needs.crosstool-ng.outputs.install_parent_directory }}
+          sudo tar --extract --gzip --directory ${{ needs.crosstool-ng.outputs.install_parent_directory }} \
+              --file=${{ steps.crosstool_ng.outputs.download-path }}/${{ needs.crosstool-ng.outputs.artifact_name }}.tar.gz
+          echo PATH="${{ needs.crosstool-ng.outputs.install_parent_directory }}/${{ needs.crosstool-ng.outputs.artifact_name }}/bin:$PATH" >> $GITHUB_ENV
 
       - name: 显示当前配置
         run: ct-ng show-config

@@ -1,0 +1,69 @@
+name: 编译安装并导出 Crosstool-NG
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '指定 Crosstool-NG 的版本，例如: ''1.26.0'''
+        type: string
+        required: true
+        default: 1.26.0
+  workflow_call:
+    inputs:
+      version:
+        description: '指定 Crosstool-NG 的版本，例如: ''1.26.0'''
+        type: string
+        required: true
+    outputs:
+      artifact_name:
+        description: 'Crosstool-NG 打包上传的名称'
+        value: ${{ jobs.crosstool-ng.outputs.artifact_name }}
+      install_parent_directory:
+        description: 'Crosstool-NG 安装父路径'
+        value: ${{ jobs.crosstool-ng.outputs.install_parent_directory }}
+
+env:
+  CROSSTOOL_NG_PARENT_DESTDIR: /usr/local/crosstool-ng-${{ inputs.version }}
+
+jobs:
+  crosstool-ng:
+    name: 编译安装 Crosstool-NG
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.environments.outputs.artifact_name }}
+      install_parent_directory: ${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 设置环境变量
+        id: environments
+        run: |
+          export CROSSTOOL_NG_ARTIFACT_NAME="Crosstool-NG-${{ inputs.version }}-${{ runner.os }}-${{ runner.arch }}"
+          echo CROSSTOOL_NG_ARTIFACT_NAME=${CROSSTOOL_NG_ARTIFACT_NAME} >> $GITHUB_ENV
+          echo artifact_name=${CROSSTOOL_NG_ARTIFACT_NAME} >> $GITHUB_OUTPUT
+
+      - name: 安装依赖
+        run: sudo apt install help2man libtool libtool-bin
+
+      - name: 下载 Crosstool-NG 并解压缩
+        run: |
+          wget http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-${{ inputs.version }}.tar.bz2
+          tar --extract --bzip2 --file=crosstool-ng-${{ inputs.version }}.tar.bz2
+
+      - name: 编译安装 Crosstool-NG
+        run: |
+          cd crosstool-ng-${{ inputs.version }}
+          ./configure --prefix=${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}/${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
+          make -j16
+          sudo make install
+          cd ..
+          export TEMP_CURRENT_DIR="$(pwd)"
+          cd ${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}
+          sudo tar --create --gzip --file=${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}.tar.gz ./${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
+          cd $TEMP_CURRENT_DIR
+          unset TEMP_CURRENT_DIR
+
+      - name: 打包 Crosstool-NG
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
+          path: ${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}/${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}.tar.gz
