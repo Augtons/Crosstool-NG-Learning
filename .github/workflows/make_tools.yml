@@ -30,7 +30,6 @@ jobs:
       - name: 编译安装 Crosstool-NG
         run: |
           cd crosstool-ng-${{ env.CROSSTOOL_NG_VERSION }}
-          echo CROSSTOOL_NG_BUILD_DIR="$(pwd)" >> $GITHUB_ENV
           ./configure --prefix=$HOME/install/${{ env.CROSSTOOL_NG_PACKAGE_NAME }}
           make -j16
           sudo make install
@@ -47,7 +46,9 @@ jobs:
         run: ct-ng show-config
 
       - name: 开始制作！
-        run: ct-ng build.16
+        run: |
+          echo CROSSTOOL_NG_BUILD_DIR="$(pwd)" >> $GITHUB_ENV
+          ct-ng build.16
 
       - name: 上传编译 log
         uses: actions/upload-artifact@v4
