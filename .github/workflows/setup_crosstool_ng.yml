@@ -1,4 +1,4 @@
-name: 编译安装并导出 Crosstool-NG
+name: 编译 Crosstool-NG
 
 on:
   workflow_dispatch:
