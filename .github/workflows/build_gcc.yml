@@ -28,6 +28,8 @@ on:
         required: true
         default: '2.38'
 
+run-name: 从源码编译 ${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }}
+
 jobs:
   build_gcc:
     name: 编译 GCC
@@ -49,7 +51,7 @@ jobs:
         run: |
           cd gcc-${{ inputs.version }}
           ./configure  \
-              --prefix=/usr/local/${{ inputs.target }}-gcc-${{ inputs.version }} \
+              --prefix=/usr/local/${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }} \
               --target=${{ inputs.target }} \
               --with-glibc-version=${{ inputs.glibc_version }} \
               --enable-languages=c,c++ \
@@ -67,5 +69,5 @@ jobs:
         run: |
           cd /usr/local
           sudo tar --create --gzip \
-              --file=${{ inputs.target }}-gcc-${{ inputs.version }}.tar.gz \
-              ${{ inputs.target }}-gcc-${{ inputs.version }}
+              --file=${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }}.tar.gz \
+              ${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }}
