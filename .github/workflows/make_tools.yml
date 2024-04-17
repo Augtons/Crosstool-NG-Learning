@@ -21,13 +21,6 @@ on:
           - ubuntu-latest
           - ubuntu-22.04
           - ubuntu-20.04
-          - windows-latest
-          - windows-2022
-          - windows-2019
-          - macos-latest
-          - macos-14
-          - macos-13
-          - macos-12
   workflow_call:
     inputs:
       artifact_name:
@@ -97,8 +90,8 @@ jobs:
       - name: 上传编译 log
         uses: actions/upload-artifact@v4
         with:
-            name: build.log
-            path: ${{ env.CROSSTOOL_NG_BUILD_DIR }}/build.log
+          name: build.log
+          path: ${{ env.CROSSTOOL_NG_BUILD_DIR }}/build.log
 
       - name: 打包工具链
         run: |
