@@ -79,7 +79,7 @@ jobs:
           cd ..
           export TEMP_CURRENT_DIR="$(pwd)"
           cd ${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}
-          sudo tar --create --gzip --file=${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}.tar.gz ./${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
+          sudo tar --create --gzip --file=${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}.tar.gz ${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
           cd $TEMP_CURRENT_DIR
           unset TEMP_CURRENT_DIR
 

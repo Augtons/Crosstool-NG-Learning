@@ -81,7 +81,7 @@ jobs:
           cd ~/x-tools
           sudo mv ./* ~/${{ inputs.artifact_name }}
           cd ~
-          tar --create --gzip --file=${{ inputs.artifact_name }}.tar.gz ./${{ inputs.artifact_name }}
+          tar --create --gzip --file=${{ inputs.artifact_name }}.tar.gz ${{ inputs.artifact_name }}
 
       - name: 上传工具链
         uses: actions/upload-artifact@v4
