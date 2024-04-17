@@ -8,12 +8,33 @@ on:
         type: string
         required: true
         default: 1.26.0
+      system:
+        description: '指定目标平台:'
+        type: choice
+        required: true
+        default: ubuntu-latest
+        options:
+          - ubuntu-latest
+          - ubuntu-22.04
+          - ubuntu-20.04
+          - windows-latest
+          - windows-2022
+          - windows-2019
+          - macos-latest
+          - macos-14
+          - macos-13
+          - macos-12
   workflow_call:
     inputs:
       version:
         description: '指定 Crosstool-NG 的版本，例如: ''1.26.0'''
         type: string
         required: true
+      system:
+        description: '指定目标平台'
+        type: string
+        required: true
+        default: ubuntu-latest
     outputs:
       artifact_name:
         description: 'Crosstool-NG 打包上传的名称'
@@ -28,7 +49,7 @@ env:
 jobs:
   crosstool-ng:
     name: 编译安装 Crosstool-NG
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.system }}
     outputs:
       artifact_name: ${{ steps.environments.outputs.artifact_name }}
       install_parent_directory: ${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}

@@ -2,19 +2,49 @@ name: 制作交叉工具链
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
+    inputs:
+      artifact_name:
+        description: '工具链打包名, 例如 aarch64-rpi5-linux-gcc13.2-glibc3.28'
+        type: string
+        required: true
+      ct_ng_version:
+        description: '指定 Crosstool-NG 的版本，例如: ''1.26.0'''
+        type: string
+        required: true
+        default: 1.26.0
+      system:
+        description: '指定目标平台:'
+        type: choice
+        required: true
+        default: ubuntu-latest
+        options:
+          - ubuntu-latest
+          - ubuntu-22.04
+          - ubuntu-20.04
+          - windows-latest
+          - windows-2022
+          - windows-2019
+          - macos-latest
+          - macos-14
+          - macos-13
+          - macos-12
+
+run-name: ${{ inputs.artifact_name }}-(${{ inputs.system }})
 
 jobs:
   crosstool-ng:
     uses: ./.github/workflows/setup-crosstool-ng.yml
     with:
-      version: 1.26.0
+      version: ${{ inputs.ct_ng_version }}
+      system: ${{ inputs.system }}
 
   make-tools:
     name: 制作交叉编译工具
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.system }}
     needs: crosstool-ng
+    env:
+      CROSSTOOL_NG_ARTIFACT_NAME: ${{ needs.crosstool-ng.outputs.artifact_name }}
+      CROSSTOOL_NG_INSTALL_PARENT_DIR: ${{ needs.crosstool-ng.outputs.install_parent_directory }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,14 +52,14 @@ jobs:
         id: crosstool_ng
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.crosstool-ng.outputs.artifact_name }}
+          name: ${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
       
       - name: 设置 ct-ng 环境
         run: |
-          sudo mkdir ${{ needs.crosstool-ng.outputs.install_parent_directory }}
-          sudo tar --extract --gzip --directory ${{ needs.crosstool-ng.outputs.install_parent_directory }} \
-              --file=${{ steps.crosstool_ng.outputs.download-path }}/${{ needs.crosstool-ng.outputs.artifact_name }}.tar.gz
-          echo PATH="${{ needs.crosstool-ng.outputs.install_parent_directory }}/${{ needs.crosstool-ng.outputs.artifact_name }}/bin:$PATH" >> $GITHUB_ENV
+          sudo mkdir ${{ env.CROSSTOOL_NG_INSTALL_PARENT_DIR }}
+          sudo tar --extract --gzip --directory ${{ env.CROSSTOOL_NG_INSTALL_PARENT_DIR }} \
+              --file=${{ steps.crosstool_ng.outputs.download-path }}/${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}.tar.gz
+          echo PATH="${{ env.CROSSTOOL_NG_INSTALL_PARENT_DIR }}/${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}/bin:$PATH" >> $GITHUB_ENV
 
       - name: 显示当前配置
         run: ct-ng show-config
@@ -42,16 +72,19 @@ jobs:
       - name: 上传编译 log
         uses: actions/upload-artifact@v4
         with:
-            name: build-log-${{ github.event.release.name }}
+            name: build.log
             path: ${{ env.CROSSTOOL_NG_BUILD_DIR }}/build.log
 
       - name: 打包工具链
         run: |
+          mkdir ~/${{ inputs.artifact_name }}
           cd ~/x-tools
-          tar --create --gzip --file=$HOME/${{ github.event.release.name }}.tar.gz ./
+          mv ./* ~/${{ inputs.artifact_name }}
+          cd ~
+          tar --create --gzip --file=${{ inputs.artifact_name }}.tar.gz ./${{ inputs.artifact_name }}
 
       - name: 上传工具链
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.release.name }}
-          path: ~/${{ github.event.release.name }}.tar.gz
+          name: ${{ inputs.artifact_name }}
+          path: ~/${{ inputs.artifact_name }}.tar.gz
