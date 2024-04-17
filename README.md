@@ -9,10 +9,21 @@
 > 此外，本仓库内容的准确性、可靠性或适用性不作任何明示或暗示的保证。
 
 # 使用方法
-1. fork 本仓库
-2. clone 仓库, 编辑 crosstool-ng 配置文件. 例如使用 `ct-ng menuconfig`
-3. push 到 fork 后的个人仓库
-4. 前往 Actions 选项卡, 选择 `制作交叉工具链`
-5. 点击 `Run Workflow` 并填写相关信息, 开始制作
-6. 等待预计 40 分钟
-7. 回到 Actions 选项卡, 找到刚刚运行的 Workflow Summary, 下载构建后的 artifact
+1\.fork 本仓库
+
+2\.clone 仓库, 编辑 `crosstool-ng` 的配置文件. 例如：
+
+```shell
+cd ./crosstool-ng-config
+ct-ng menuconfig
+```
+
+3\. push 到 fork 后的个人仓库
+
+4\. 前往 Actions 选项卡, 选择 `制作交叉工具链`
+
+5\. 点击 `Run Workflow` 并填写相关信息, 开始制作
+
+6\. 等待预计 40 分钟
+
+7\. 回到 Actions 选项卡, 找到刚刚运行的 Workflow Summary, 下载构建后的 artifact

@@ -76,12 +76,8 @@ jobs:
           ./configure --prefix=${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}/${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
           make -j16
           sudo make install
-          cd ..
-          export TEMP_CURRENT_DIR="$(pwd)"
           cd ${{ env.CROSSTOOL_NG_PARENT_DESTDIR }}
           sudo tar --create --gzip --file=${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}.tar.gz ${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}
-          cd $TEMP_CURRENT_DIR
-          unset TEMP_CURRENT_DIR
 
       - name: 打包 Crosstool-NG
         uses: actions/upload-artifact@v4

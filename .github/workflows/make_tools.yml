@@ -28,6 +28,26 @@ on:
           - macos-14
           - macos-13
           - macos-12
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: '工具链打包名, 例如 aarch64-rpi5-linux-gcc13.2-glibc3.28'
+        type: string
+        required: true
+      ct_ng_version:
+        description: '指定 Crosstool-NG 的版本，例如: ''1.26.0'''
+        type: string
+        required: true
+        default: 1.26.0
+      system:
+        description: '指定目标平台:'
+        type: string
+        required: true
+        default: ubuntu-latest
+    outputs:
+      artifact_name:
+        description: '交叉编译工具链打包上传的名称'
+        value: ${{ jobs.make-tools.outputs.artifact_name }}
 
 run-name: ${{ inputs.artifact_name }}-(${{ inputs.system }})
 
@@ -45,6 +65,8 @@ jobs:
     env:
       CROSSTOOL_NG_ARTIFACT_NAME: ${{ needs.crosstool-ng.outputs.artifact_name }}
       CROSSTOOL_NG_INSTALL_PARENT_DIR: ${{ needs.crosstool-ng.outputs.install_parent_directory }}
+    outputs:
+      artifact_name: ${{ steps.set_output.outputs.artifact_name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -62,10 +84,13 @@ jobs:
           echo PATH="${{ env.CROSSTOOL_NG_INSTALL_PARENT_DIR }}/${{ env.CROSSTOOL_NG_ARTIFACT_NAME }}/bin:$PATH" >> $GITHUB_ENV
 
       - name: 显示当前配置
-        run: ct-ng show-config
+        run: |
+          cd ./crosstool-ng-config
+          ct-ng show-config
 
       - name: 开始制作！
         run: |
+          cd ./crosstool-ng-config
           echo CROSSTOOL_NG_BUILD_DIR="$(pwd)" >> $GITHUB_ENV
           ct-ng build.16
 
@@ -78,7 +103,7 @@ jobs:
       - name: 打包工具链
         run: |
           mkdir ~/${{ inputs.artifact_name }}
-          cd ~/x-tools
+          cd ~/x-tools/*/
           sudo mv ./* ~/${{ inputs.artifact_name }}
           cd ~
           tar --create --gzip --file=${{ inputs.artifact_name }}.tar.gz ${{ inputs.artifact_name }}
@@ -88,3 +113,7 @@ jobs:
         with:
           name: ${{ inputs.artifact_name }}
           path: ~/${{ inputs.artifact_name }}.tar.gz
+      
+      - name: 设置输出信息
+        id: set_output
+        run: echo artifact_name=${{ inputs.artifact_name }} >> $GITHUB_OUTPUT
