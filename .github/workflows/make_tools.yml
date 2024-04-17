@@ -79,7 +79,7 @@ jobs:
         run: |
           mkdir ~/${{ inputs.artifact_name }}
           cd ~/x-tools
-          mv ./* ~/${{ inputs.artifact_name }}
+          sudo mv ./* ~/${{ inputs.artifact_name }}
           cd ~
           tar --create --gzip --file=${{ inputs.artifact_name }}.tar.gz ./${{ inputs.artifact_name }}
 
