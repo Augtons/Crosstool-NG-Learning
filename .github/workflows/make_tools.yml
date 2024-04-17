@@ -46,7 +46,7 @@ run-name: ${{ inputs.artifact_name }}-(${{ inputs.system }})
 
 jobs:
   crosstool-ng:
-    uses: ./.github/workflows/setup-crosstool-ng.yml
+    uses: ./.github/workflows/setup_crosstool_ng.yml
     with:
       version: ${{ inputs.ct_ng_version }}
       system: ${{ inputs.system }}
@@ -78,12 +78,12 @@ jobs:
 
       - name: 显示当前配置
         run: |
-          cd ./crosstool-ng-config
+          cd ./crosstool_ng_config
           ct-ng show-config
 
       - name: 开始制作！
         run: |
-          cd ./crosstool-ng-config
+          cd ./crosstool_ng_config
           echo CROSSTOOL_NG_BUILD_DIR="$(pwd)" >> $GITHUB_ENV
           ct-ng build.16
 

@@ -14,7 +14,7 @@
 2\.clone 仓库, 编辑 `crosstool-ng` 的配置文件. 例如：
 
 ```shell
-cd ./crosstool-ng-config
+cd ./crosstool_ng_config
 ct-ng menuconfig
 ```
 
