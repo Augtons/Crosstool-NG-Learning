@@ -1,4 +1,4 @@
-name: 从源码编译 gcc
+name: 从源码编译 gcc 而不采用 crosstool-ng
 
 on:
   workflow_dispatch:
