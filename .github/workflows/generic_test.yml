@@ -1,4 +1,4 @@
-name: 通用测试
+name: 从源码编译 gcc 而不采用 crosstool-ng
 
 on:
   workflow_dispatch:
@@ -10,28 +10,59 @@ on:
         default: ubuntu-latest
         options:
           - ubuntu-latest
-          - ubuntu-24.04
           - ubuntu-22.04
           - ubuntu-20.04
-          - macos-latest
-          - macos-14
-          - macos-13
-          - macos-12
-          - windows-latest
-          - windows-2022
-          - windows-2019
+      target:
+        description: 'GCC 目标机器，例如: aarch64-linux-gnu'
+        type: string
+        required: true
+        default: aarch64-linux-gnu
+      glibc_version:
+        description: 'GCC 目标依赖的 glibc 版本，将传递给 --with-glibc-version'
+        type: string
+        required: true
+        default: '2.38'
 
-run-name: 通用测试
+run-name: 从源码编译 ${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }}
 
 jobs:
-  generic_test:
-    name: 通用测试
+  build_gcc:
+    name: 编译 GCC
     runs-on: ${{ inputs.system }}
     steps:
-      - name: 检出分支代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 通用测试
+      - name: 下载 gcc ${{ inputs.version }} 源码，并解压
         run: |
-          echo "### Hello world! :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "This is ${{ inputs.system }}" >> $GITHUB_STEP_SUMMARY
+          wget https://ftp.gnu.org/gnu/gcc/gcc-${{ inputs.version }}/gcc-${{ inputs.version }}.tar.gz
+          tar --extract --gzip --file=gcc-${{ inputs.version }}.tar.gz
+
+      - name: 下载依赖源码
+        run: |
+          cd gcc-${{ inputs.version }}
+          ./contrib/download_prerequisites
+
+      - name: 配置 gcc
+        run: |
+          cd gcc-${{ inputs.version }}
+          ./configure  \
+              --prefix=/usr/local/${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }} \
+              --target=${{ inputs.target }} \
+              --with-glibc-version=${{ inputs.glibc_version }} \
+              --enable-languages=c,c++ \
+              --disable-multilib \
+              CFLAGS="-O3 -Wno-error"  \
+              CXXFLAGS="-O3 -Wno-error"
+
+      - name: 编译安装 gcc
+        run: |
+          cd gcc-${{ inputs.version }}
+          make -j16
+          sudo make install
+
+      - name: 打包 gcc
+        run: |
+          cd /usr/local
+          sudo tar --create --gzip \
+              --file=${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }}.tar.gz \
+              ${{ inputs.target }}-gcc-${{ inputs.version }}-glibc-${{ inputs.glibc_version }}
